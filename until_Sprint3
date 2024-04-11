@@ -1,0 +1,46 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+int main() {
+   char header[44];
+   ifstream xx("Beatles-LetItBe-wav_30s.wav", ios::binary | ios::in);
+
+   if (!xx) return 404; //파일 존재 확인
+
+   xx.read(header, 44 * sizeof(char));
+   xx.close();
+
+   //Sprint 1
+   short* n;   n = (short*)(header + 22);
+   int* fs;   fs = (int*)(header + 24);
+   int* b;   b = (int*)(header + 28);
+
+   //Sprint 2
+   int N = fs[0] * 10;
+   short* data;
+   data = new short[N];
+
+   //내 파일 만들기
+   *n = 1; //Numchannel -> 1
+   *b = n[0] * fs[0] * sizeof(short); //Byterate = NumChannels * SampleRate * sizeofshort
+   xx.read((char*)data, N * sizeof(short));
+   ofstream yy("my.wav", ios::binary | ios::out);
+   if (!yy) return 404;
+   yy.write(header, 44 * sizeof(char));
+   yy.write((char*)data, N * sizeof(short));
+   yy.close();
+
+   int NN = 10 * fs[0];
+   short* data_; data_ = new short[NN];
+   const float pi = 3.141592;
+   float dt = 1. / fs[0], a = 10000., f = 440.; //라=440.0
+   for (int i = 0; i < NN; i++)
+      data_[i] = (short)(a * sin(2.0 * pi * f * i * dt));
+   ofstream yyy("mine.wav", ios::binary | ios::out);
+   if (!yyy) return 000;
+   yyy.write(header, 44 * sizeof(char)); 
+   yyy.write((char*)data_, NN * sizeof(short)); 
+   yyy.close();
+
+   return 10;
+}
