@@ -1,0 +1,84 @@
+
+#include <iostream>
+#include <fstream>
+#include <cmath> 
+using namespace std;
+
+//음 길이, 음 높이, 음 세기를 입력받아 해당하는 음 데이터 write하는 함수
+void note(float T, float f, float A, ofstream& X)
+{
+    const float pi = 3.141592;
+    short* data;
+    data = new short[T];
+    float t = 0;
+    float dt = 1. / 44100;
+
+    for (int i = 0; i < T; i++, t += dt)
+    {
+        data[i] = (short)(A * sin(2.0 * pi * f * t));
+    }
+
+    X.write((char*)data, sizeof(short) * T);
+}
+
+int main()
+{
+    ifstream xx("Beatles-LetItBe-wav_30s.wav", ios::binary | ios::in);
+    if (!xx) return 999;  // 파일을 찾을 수 없는 경우
+
+    char header[44];
+    xx.read(header, 44); //header 값 불러오기
+    int* fs = (int*)(header + 24); //sampleRate
+    short* nc = (short*)(header + 22);
+    int* b = (int*)(header + 28);
+    *nc = 1;
+    *b = nc[0] * fs[0] * sizeof(short);
+
+    xx.close();
+
+    //txt 악보에서 음 길이, 음 높이, 세기 읽기
+    ifstream zz("akbo.txt");
+    if (!zz) return 997;
+
+    int n;
+    float* TT, * AA, * FF; char* ff;
+    zz >> n; //음표 몇개인지 읽기
+    TT = new float[n]; AA = new float[n]; FF = new float[n]; ff = new char[n];
+
+    for (int i = 0; i < n; i++)
+    {
+        zz >> TT[i] >> ff[i] >> AA[i];
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (TT[i] == 8) TT[i] = fs[0] * 5*1.5 / 10;
+        else if (TT[i] == 4) TT[i] = fs[0] * 2 * 5 / 10;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        if (ff[i] == 'C') FF[i] = 261.63;
+        else if (ff[i] == 'D') FF[i] = 293.66;
+        else if (ff[i] == 'E') FF[i] = 329.63;
+    }
+
+    for (int i = 0; i < n; i++)
+    {
+        AA[i] *= 1000;
+    }
+    zz.close();
+
+    //wav파일 작성
+    ofstream yy("airplane3.wav", ios::binary | ios::out);
+    if (!yy) return 998;
+
+    yy.write(header, 44 * sizeof(char)); //header 쓰기
+
+
+    for (int i = 0; i < n; i++)
+    {
+        note(TT[i], FF[i], AA[i], yy);
+    }
+    yy.close();
+}
